@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('wallet_id')->constrained()->onDelete('cascade'); // remetente
+            $table->enum('type', ['deposit', 'transfer']);
+            $table->decimal('amount', 15, 2);
+            $table->foreignId('receiver_wallet_id')->nullable()->constrained('wallets')->onDelete('set null'); // destinatário
             $table->timestamps();
         });
     }
