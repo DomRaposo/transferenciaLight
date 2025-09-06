@@ -1,0 +1,18 @@
+flowchart TD
+    A[User initiates transfer]
+    A --> B[Auth via Sanctum]
+    B --> C{Role == user?}
+    C -- No (merchant) --> E[Reject: merchants cannot send]
+    C -- Yes --> D[Load sender and receiver wallets - lockForUpdate]
+    D --> F{Sender balance >= amount?}
+    F -- No --> G[Reject: insufficient funds]
+    F -- Yes --> H[Call Authorizer GET authorize endpoint - 3s timeout, 2 retries]
+    H -->|Denied or fail after retries| I[Reject transfer]
+    H -->|Authorized| J[DB Transaction]
+    J --> K[Debit sender wallet]
+    J --> L[Credit receiver wallet]
+    J --> M[Create Transaction record]
+    J --> N[Commit]
+    N --> O[Notify via POST notify endpoint]
+    O -->|Success| P[Return 201 with transaction]
+    O -->|Failure| Q[Enqueue retry job and return 201]
